@@ -10,6 +10,7 @@ import {
   Dimensions,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -38,6 +39,7 @@ const KycWizard = () => {
   const [documents, setDocuments] = useState([]);
   const [leadInfo, setLeadInfo] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const tabScrollViewRef = useRef(null);
   const tabRefs = useRef([]);
   const { user } = useSelector(state => state.auth);
@@ -85,7 +87,7 @@ const KycWizard = () => {
   };
 
   const onLeadAdded = async () => {
-fetchWorkflowSteps();
+    fetchWorkflowSteps();
     handleFetchLeadInfo(user.mobile);
   }
   const handleFetchLeadInfo = async (client_mobile) => {
@@ -329,6 +331,21 @@ fetchWorkflowSteps();
     );
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchWorkflowSteps();
+      if (user?.mobile) {
+        await handleFetchLeadInfo(user.mobile);
+      }
+    } catch (error) {
+      console.error('Refresh error:', error);
+      Alert.alert('Error', 'Failed to refresh data.');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const StepContent = () => {
     const selectedStep = visibleSteps.find(s => s.id === selectedStepId);
     if (!selectedStep) return null;
@@ -415,7 +432,13 @@ const stepComponents = {
               <TabItem key={step.key} step={step} index={index} />
             ))}
           </ScrollView>
-          <ScrollView style={styles.contentScrollView} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            style={styles.contentScrollView} 
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          >
             <StepContent />
           </ScrollView>
         </>
