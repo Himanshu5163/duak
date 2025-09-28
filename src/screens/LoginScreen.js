@@ -41,12 +41,12 @@ const LoginScreen = () => {
   }, [API_URL, dispatch]);
 
   const navigation = useNavigation(); // initialize navigation
-
+const [loginError, setLoginError] = useState(""); // add this
   const validateForm = () => {
     const newErrors = {};
 
     if (!username) {
-      newErrors.username = 'username is required';
+      newErrors.username = 'Username is required';
     }
 
     if (!password) {
@@ -57,49 +57,48 @@ const LoginScreen = () => {
     return Object.keys(newErrors).length === 0;
   };
   //Alert.alert('settings:', JSON.stringify(settings, null, 2));
-  const handleLogin = async () => {
-    if (!validateForm()) return;
+const handleLogin = async () => {
+  if (!validateForm()) return;
 
-    setIsLoading(true);
+  setIsLoading(true);
+  setLoginError(""); // reset error on new attempt
 
-    const formData = {
-      username: username, // Your backend expects "username", not "userName"
-      password: password,
-      role_id: selectedRole,
-    };
-
-    try {
-      const response = await fetch(`${Strings.APP_BASE_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const resp = await response.json();
-
-     if (resp?.status === true) {
-        console.log('Login Successful:', JSON.stringify(resp.user, null, 2));
-        console.log('token Successful:', resp.access_token);
-        
-        // save user and token
-        await storeUser(resp.user, resp.access_token);
-
-        dispatch(login(resp.user)); // Redux login
-        Alert.alert('Login', resp.message || 'Login successful');
-      }else {
-        console.warn('Login Failed:', resp?.message);
-        Alert.alert('Login Failed', resp?.message || 'Invalid credentials');
-      }
-    } catch (error) {
-      console.error('Login Error:', error.message);
-      Alert.alert('Login Error', error.message || 'Something went wrong');
-    }
-
-    setIsLoading(false);
+  const formData = {
+    username,
+    password,
+    role_id: selectedRole,
   };
+
+  try {
+    const response = await fetch(`${Strings.APP_BASE_URL}/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
+
+    const resp = await response.json();
+
+    if (resp?.status === true) {
+      console.log("Login Successful:", JSON.stringify(resp.user, null, 2));
+      console.log("token Successful:", resp.access_token);
+
+      await storeUser(resp.user, resp.access_token);
+      dispatch(login(resp.user)); // Redux login
+      // Alert.alert("Login", resp.message || "Login successful");
+    } else {
+      console.warn("Login Failed:", resp?.message);
+      setLoginError(resp?.message || "Invalid credentials"); // <-- set error state
+    }
+  } catch (error) {
+    console.error("Login Error:", error.message);
+    setLoginError(error.message || "Something went wrong"); // <-- set error
+  }
+
+  setIsLoading(false);
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -156,7 +155,7 @@ const LoginScreen = () => {
                           selectedRole === '5' && styles.activeRoleButtonText,
                         ]}
                       >
-                        Relationship Manager
+                        RM
                       </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
@@ -172,7 +171,7 @@ const LoginScreen = () => {
                           selectedRole === '6' && styles.activeRoleButtonText,
                         ]}
                       >
-                        User
+                        Client
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -194,7 +193,7 @@ const LoginScreen = () => {
                   />
                   <TextInput
                     style={styles.textInput}
-                    placeholder="username "
+                    placeholder="Username "
                     placeholderTextColor="#FFFFFF"
                     value={username}
                     onChangeText={setUserName}
@@ -254,6 +253,11 @@ const LoginScreen = () => {
               </TouchableOpacity> */}
 
               {/* Login Button */}
+
+              {/* Error message above login button */}
+{loginError ? (
+  <Text style={styles.loginErrorText}>{loginError}</Text>
+) : null}
               <TouchableOpacity
                 style={[
                   styles.loginButton,
@@ -479,6 +483,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loginErrorText: {
+  color: "#ff6b6b",
+  fontSize: 15,
+  marginBottom: 12,
+  textAlign: "center",
+  fontWeight: "500",
+},
   loginButtonTextContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -563,7 +574,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 3,
     borderRadius: 50,
-    marginBottom: 10,
+    marginBottom: 20,
     height: 50,
     marginHorizontal:'auto'
   },

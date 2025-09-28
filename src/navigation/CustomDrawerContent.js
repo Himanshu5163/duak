@@ -1,5 +1,4 @@
-// CustomDrawerContent.js
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +8,7 @@ import {
   Alert,
   Animated,
   StyleSheet,
+  Platform
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../redux/authSlice';
@@ -17,82 +17,103 @@ import { fetchSidebars } from '../redux/sidebarSlice';
 import { Strings } from '../theme/Strings';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
+// Define menu items outside the component for better performance
 const menuItems = [
   {
     id: 1,
     title: 'Dashboard',
     icon: 'house-user',
-    screen: 'dashboard',
-    color: '#667eea',
-    submenus: [],
+    screen: 'Dashboard',
+    roles: [5, 6],
   },
   {
     id: 2,
-    title: 'Product List',
+    title: 'My Product',
     icon: 'box',
     screen: 'productList',
-    color: '#667eea',
-    submenus: [],
+    roles: [6],
   },
   {
     id: 3,
-    title: 'Support Managment',
+    title: 'Kyc',
+    icon: 'box',
+    screen: 'kycWizard',
+    roles: [6],
+  },
+  {
+    id: 4,
+    title: 'Tickets',
     icon: 'headset',
-    screen: 'productList',
-    color: '#667eea',
     submenus: [
-      { id: 31, title: 'Raise Ticket', screen: 'SupportTicketAdd' },
-      { id: 32, title: 'View Ticket', screen: 'SupportTicketList' },
+      { id: 31, title: 'Raise Ticket', screen: 'SupportTicketAdd', roles: [6] },
+      { id: 32, title: 'View Ticket', screen: 'SupportTicketList', roles: [5, 6] },
     ],
+    roles: [5, 6],
+  },
+  {
+    id: 5,
+    title: 'Leads',
+    icon: 'user-friends',
+    submenus: [
+      { id: 51, title: 'Add Lead', screen: 'leadAdd', roles: [5, 6] },
+      { id: 52, title: 'New Leads', screen: 'LeadNew', roles: [5] },
+      { id: 53, title: 'Lead Qualified', screen: 'leadQualified', roles: [5] },
+      { id: 54, title: 'Lead Conversion', screen: 'LeadConversion', roles: [5] },
+      { id: 55, title: 'Lead Closure', screen: 'LeadClosure', roles: [5] },
+    ],
+    roles: [5, 6],
   },
   {
     id: 12,
     title: 'Settings',
     icon: 'toolbox',
     screen: 'Setting',
-    color: '#a8edea',
-    submenus: [],
+    roles: [5, 6],
   },
 ];
 
 const CustomDrawerContent = ({ navigation }) => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
-  const [expandedMenus, setExpandedMenus] = useState({});
-  const [animatedValues] = useState({});
-  const [activeItemId, setActiveItemId] = useState(null);
-
-  const API_URL = Strings.APP_BASE_URL || '';
   const user_id = user?.id || '';
   const role_id = user?.role_id || '';
 
-  useEffect(() => {
-    if (API_URL) {
-      dispatch(fetchSidebars({ API_URL, user_id, role_id }));
-    }
-  }, [API_URL, dispatch]);
+  const [expandedMenus, setExpandedMenus] = useState({});
+  const animatedValues = useRef({});
+
+  // Get the current route name from the navigation state for active item highlighting
+  const currentRoute = navigation.getState().routes[navigation.getState().index];
+  const routeName = currentRoute.name;
 
   useEffect(() => {
+    // Initialize animated values for submenus
     menuItems.forEach(item => {
       if (item.submenus?.length) {
-        animatedValues[item.id] = new Animated.Value(0);
+        if (!animatedValues.current[item.id]) {
+          animatedValues.current[item.id] = new Animated.Value(0);
+        }
       }
     });
-  }, []);
 
-  const toggleSubmenu = menuId => {
-    const isExpanded = expandedMenus[menuId];
-    setExpandedMenus(prev => ({ ...prev, [menuId]: !prev[menuId] }));
+    // You can uncomment this if you need to fetch sidebar data dynamically
+    // if (Strings.APP_BASE_URL) {
+    //   dispatch(fetchSidebars({ API_URL: Strings.APP_BASE_URL, user_id, role_id }));
+    // }
+  }, [dispatch, user_id, role_id]);
 
-    Animated.timing(animatedValues[menuId], {
+  const toggleSubmenu = useCallback(menuId => {
+    const isExpanded = !!expandedMenus[menuId];
+    setExpandedMenus(prev => ({ ...prev, [menuId]: !isExpanded }));
+
+    Animated.timing(animatedValues.current[menuId], {
       toValue: isExpanded ? 0 : 1,
       duration: 300,
       useNativeDriver: false,
     }).start();
-  };
+  }, [expandedMenus]);
 
-  const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure?', [
+  const handleLogout = useCallback(() => {
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Sign Out',
@@ -103,14 +124,25 @@ const CustomDrawerContent = ({ navigation }) => {
         },
       },
     ]);
-  };
+  }, [dispatch]);
 
-  const navigateToScreen = screenName => {
+  const navigateToScreen = useCallback(screenName => {
     if (screenName) {
       navigation.navigate(screenName);
       navigation.closeDrawer();
     }
-  };
+  }, [navigation]);
+
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter(item => {
+    const isMainVisible = item.roles.includes(role_id);
+    if (!isMainVisible) return false;
+
+    if (item.submenus) {
+      item.submenus = item.submenus.filter(sub => sub.roles.includes(role_id));
+    }
+    return true;
+  });
 
   return (
     <View style={styles.drawerContainer}>
@@ -120,103 +152,100 @@ const CustomDrawerContent = ({ navigation }) => {
           <View style={styles.profileImageContainer}>
             <Image
               source={{
-                uri:
-                  user?.image_url ||
-                  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+                uri: user?.image_url || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?fit=crop&crop=face&w=150&h=150',
               }}
               style={styles.profileImage}
             />
             <View style={styles.onlineIndicator} />
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>
-              {user?.name || 'John Doe'}
-            </Text>
-            <Text style={styles.profileEmail}>
-              {user?.mobile || 'john@example.com'}
-            </Text>
+            <Text style={styles.profileName} numberOfLines={1}>{user?.name || 'Welcome Guest'}</Text>
+            <Text style={styles.profileEmail} numberOfLines={1}>{user?.mobile || user?.email || ''}</Text>
             <View style={styles.profileBadge}>
-              <Text style={styles.profileRole}>
-                {user?.role_id || 'Administrator'}
+              <Text style={styles.profileRole} numberOfLines={1}>
+                {user?.role_name || ''}
               </Text>
             </View>
           </View>
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1 }}>
-        {menuItems.map(item => {
-          const hasSubmenu = item.submenus.length > 0;
-          const isExpanded = expandedMenus[item.id]; // ✅ use expandedMenus object
-          const animation = animatedValues[item.id]; // already created in useEffect
+      <ScrollView style={styles.menuScrollView}>
+        {filteredMenuItems.map(item => {
+          const hasSubmenu = item.submenus && item.submenus.length > 0;
+          const isActive = routeName === item.screen || (hasSubmenu && item.submenus.some(sub => sub.screen === routeName));
+          const animation = hasSubmenu ? animatedValues.current[item.id] : null;
 
           return (
-            <View key={item.id} style={{ marginTop: 8 }}>
+            <View key={item.id}>
               <TouchableOpacity
                 style={[
                   styles.moduleButton,
-                  activeItemId === item.id && styles.moduleButtonActive,
+                  isActive && styles.moduleButtonActive,
                 ]}
                 onPress={() => {
-                  setActiveItemId(item.id);
                   hasSubmenu ? toggleSubmenu(item.id) : navigateToScreen(item.screen);
                 }}
                 activeOpacity={0.7}
               >
-                <View style={{flexDirection:'row'}}>
-                  <Icon name={item.icon} size={16} color={activeItemId === item.id ? "#000" : "#fff"} />
+                <View style={styles.iconTextContainer}>
+                  <Icon name={item.icon} size={16} color={isActive ? styles.moduleTextActive.color : styles.moduleButtonText.color} />
                   <Text
                     style={[
                       styles.moduleButtonText,
-                      activeItemId === item.id && styles.moduleTextActive,
+                      isActive && styles.moduleTextActive,
                     ]}
                   >
                     {item.title}
                   </Text>
                 </View>
 
-                {/* Toggle arrow if submenu exists */}
-                {hasSubmenu && (
+                {hasSubmenu && animation && (
                   <Animated.View
-                    style={{
-                      transform: [
-                        {
-                          rotate: animation
-                            ? animation.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: ["0deg", "180deg"], // ▶ rotates to ▼
-                            })
-                            : "0deg",
-                        },
-                      ],
-                      marginLeft: 8,
-                    }}
+                    style={[
+                      styles.caretIcon,
+                      {
+                        transform: [{
+                          rotate: animation.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: ['0deg', '180deg'],
+                          }),
+                        }],
+                      },
+                    ]}
                   >
-                    {/* <Text style={{ color: "#000", fontSize: 14 }}>▶</Text> */}
-                    <Icon name="caret-up" size={16} color={activeItemId === item.id ? "#000" : "#fff"} />
+                    <Icon name="caret-up" size={16} color={isActive ? styles.moduleTextActive.color : styles.moduleButtonText.color} />
                   </Animated.View>
                 )}
               </TouchableOpacity>
 
-              {hasSubmenu && (
+              {hasSubmenu && animation && (
                 <Animated.View
-                  style={{
-                    maxHeight: animation
-                      ? animation.interpolate({
+                  style={[
+                    styles.submenuContainer,
+                    {
+                      maxHeight: animation.interpolate({
                         inputRange: [0, 1],
                         outputRange: [0, item.submenus.length * 40],
-                      })
-                      : 0,
-                    overflow: "hidden",
-                  }}
+                      }),
+                    },
+                  ]}
                 >
                   {item.submenus.map(sub => (
                     <TouchableOpacity
                       key={sub.id}
                       onPress={() => navigateToScreen(sub.screen)}
-                      style={{ paddingLeft: 30, paddingVertical: 10 }}
+                      style={[
+                        styles.submenuButton,
+                        routeName === sub.screen && styles.submenuButtonActive,
+                      ]}
                     >
-                      <Text style={{ color: "#FFFFFF" }}>{sub.title}</Text>
+                      <Text
+                        style={[
+                          styles.submenuText,
+                          routeName === sub.screen && styles.submenuTextActive,
+                        ]}
+                      >{sub.title}</Text>
                     </TouchableOpacity>
                   ))}
                 </Animated.View>
@@ -236,7 +265,6 @@ const CustomDrawerContent = ({ navigation }) => {
           <Text style={styles.logoutText}>🚪 Sign Out</Text>
         </TouchableOpacity>
       </View>
-
     </View>
   );
 };
@@ -248,11 +276,10 @@ const styles = StyleSheet.create({
   },
   profileSection: {
     backgroundColor: '#002c54',
-    paddingTop: 50,
+    paddingTop: Platform.OS === 'android' ? 60 : 50,
     paddingBottom: 10,
     paddingHorizontal: 20,
     position: 'relative',
-    // Create gradient effect with overlay
     shadowColor: '#002c54',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
@@ -264,11 +291,10 @@ const styles = StyleSheet.create({
   profileHeader: {
     alignItems: 'center',
     flexDirection: 'row',
-    gap: 5,
+    gap: 15,
   },
   profileImageContainer: {
     position: 'relative',
-    marginBottom: 16,
   },
   profileImage: {
     width: 85,
@@ -289,20 +315,18 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   profileInfo: {
-    alignItems: 'center',
+    flex: 1,
   },
   profileName: {
     fontSize: 20,
     fontWeight: '700',
     color: '#fff',
     marginBottom: 4,
-    textAlign: 'center',
   },
   profileEmail: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.8)',
     marginBottom: 12,
-    textAlign: 'center',
   },
   profileBadge: {
     backgroundColor: 'rgba(255,255,255,0.2)',
@@ -319,95 +343,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  menuSection: {
-    flex: 1,
-    paddingTop: 20,
-  },
-  menuContainer: {
-    paddingHorizontal: 12,
-  },
-  menuItemContainer: {
-    marginBottom: 4,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginHorizontal: 4,
-  },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  menuItemText: {
-    fontSize: 16,
-    color: '#1f2937',
-    fontWeight: '600',
-    flex: 1,
-  },
-  submenuContainer: {
-    overflow: 'hidden',
-    marginLeft: 20,
-    marginRight: 8,
-  },
-  submenuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginVertical: 1,
-  },
-  submenuConnector: {
-    width: 2,
-    height: 20,
-    backgroundColor: '#e5e7eb',
-    marginRight: 14,
-    borderRadius: 1,
-  },
-  emojiIcon: {
-    textAlign: 'center',
-  },
-  submenuEmojiIcon: {
-    fontSize: 16,
-    marginRight: 12,
-  },
-  expandIcon: {
-    fontSize: 16,
-    color: '#8e8e93',
-    fontWeight: 'bold',
-  },
-  logoutIcon: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  hamburgerIcon: {
-    fontSize: 18,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  submenuText: {
-    fontSize: 14,
-    color: '#6b7280',
-    fontWeight: '500',
+  menuScrollView: {
     flex: 1,
   },
   logoutSection: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   logoutButton: {
     borderRadius: 12,
@@ -420,41 +362,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#fd7e14',
     padding: 13,
   },
-  logoutGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    backgroundColor: '#fd7e14',
-  },
   logoutText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
     textAlign: 'center',
-  },
-  appInfo: {
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  appVersion: {
-    fontSize: 12,
-    color: '#9ca3af',
-    fontWeight: '500',
-  },
-  hamburgerButton: {
-    marginLeft: 16,
-    padding: 4,
-  },
-  hamburgerContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   moduleButton: {
     flexDirection: 'row',
@@ -468,8 +380,10 @@ const styles = StyleSheet.create({
   },
   moduleButtonActive: {
     backgroundColor: '#F3F4F6',
-    borderLeftWidth: 3,
-    borderLeftColor: '#fd7e14',
+  },
+  iconTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   moduleButtonText: {
     marginLeft: 12,
@@ -478,14 +392,34 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   moduleTextActive: {
-    marginLeft: 12,
-    fontSize: 15,
-    fontWeight: '500',
     color: '#002c54',
   },
-  moduleIconActive: {
-    color: '#002c54',
+  caretIcon: {
+    marginLeft: 8,
   },
+  submenuContainer: {
+    overflow: 'hidden',
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    marginHorizontal: 12,
+    borderRadius: 12,
+    marginTop: -4,
+    marginBottom: 4,
+  },
+  submenuButton: {
+    paddingLeft: 40,
+    paddingVertical: 10,
+  },
+  submenuButtonActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  submenuText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '400',
+  },
+  submenuTextActive: {
+    fontWeight: '600',
+  }
 });
 
 export default CustomDrawerContent;

@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
-import { Text, View, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useState } from 'react';
+import { Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
@@ -12,49 +12,54 @@ const Footer = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { user } = useSelector(state => state.auth);
+  const [activeTab, setActiveTab] = useState('Dashboard');
+
   const items = [
-    { label: 'Home', icon: 'home', screen: 'dashboard' },
-    {
-      label: 'Attendance',
-      icon: 'appointment',
-      screen: 'Attendance',
-    },
-    {
-      label: 'Notice Board',
-      icon: 'history',
-      screen: 'NoticeBoard',
-    },
-    { label: 'Profile View', icon: 'profile', screen: 'ProfileView' },
+    { label: 'Dashboard', icon: 'view-dashboard-outline', screen: 'Dashboard' },
+    { label: 'My Tickets', icon: 'ticket-outline', screen: 'MyTickets' },
+    { label: 'Products', icon: 'package-variant-closed', screen: 'Products' },
+    { label: 'You', icon: 'account-circle-outline', screen: 'Profile' },
   ];
-  const iconMap = {
-    home: require('../theme/asserts/icon/house.png'),
-    appointment: require('../theme/asserts/icon/shedule.png'),
-    history: require('../theme/asserts/icon/exam.png'),
-    profile: require('../theme/asserts/icon/profile.png'),
+
+  const handlePress = (screen) => {
+    setActiveTab(screen);
+    navigation.navigate(screen);
   };
+
   return (
     <View
       style={[
         styles.footer,
-        { paddingBottom: insets.bottom },
-        { backgroundColor: themeColor },
+        { paddingBottom: insets.bottom || 8 },
+        { backgroundColor: themeColor || colors.primary },
       ]}
     >
       {items.map((item, index) => (
         <TouchableOpacity
           key={index}
-          style={styles.tab}
-          onPress={() => navigation.navigate(item.screen)}
+          style={[styles.tab, activeTab === item.screen && styles.activeTab]}
+          onPress={() => handlePress(item.screen)}
+          activeOpacity={0.7}
         >
-          {/* <Icon name={item.icon} size={24} color="#fff" /> */}
-          <Image
-            source={
-              iconMap[item.icon] || require('../theme/asserts/icon/default.png')
-            } // optional fallback icon
-            style={{ width: 24, height: 24 }}
-            resizeMode="contain"
-          />
-          <Text style={styles.label}>{item.label}</Text>
+          <View style={styles.iconContainer}>
+            <Icon
+              name={item.icon}
+              size={24}
+              style={[
+                styles.icon,
+                activeTab === item.screen && styles.activeIcon,
+              ]}
+            />
+            {activeTab === item.screen && <View style={styles.activeIndicator} />}
+          </View>
+          <Text
+            style={[
+              styles.label,
+              activeTab === item.screen && styles.activeLabel,
+            ]}
+          >
+            {item.label}
+          </Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -65,20 +70,56 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-
-    paddingTop: 10,
+    paddingTop: 8,
+    paddingHorizontal: 8,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    alignItems: 'center',
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: '#1a1a1a',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   tab: {
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    flex: 1,
+  },
+  activeTab: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 10,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  icon: {
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  activeIcon: {
+    color: '#fff',
+    transform: [{ scale: 1.1 }],
+  },
+  activeIndicator: {
+    width: 4,
+    height: 4,
+    backgroundColor: '#fff',
+    borderRadius: 2,
+    position: 'absolute',
+    bottom: -4,
   },
   label: {
-    fontSize: 12,
-    color: '#fff',
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.7)',
     marginTop: 2,
-    marginBottom: 8,
+    fontWeight: '500',
+  },
+  activeLabel: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });
 
