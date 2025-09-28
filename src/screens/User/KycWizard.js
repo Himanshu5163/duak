@@ -20,11 +20,15 @@ import StatusBadge from './StatusBadge';
 import { useSelector } from 'react-redux';
 import { Strings } from '../../theme/Strings';
 import { getToken } from '../../utils/storage';
+import Qualified from '../Lead/Qualified';
+import BankLoan from '../Lead/BankLoan';
+import PaymentReceived from '../Lead/PaymentReceived';
+import MaterialDispatch from '../Lead/MaterialDispatch';
 const { width } = Dimensions.get('window');
 
 const KycWizard = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedStepId, setSelectedStepId] = useState(1);
+  const [selectedStepId, setSelectedStepId] = useState(5);
   const [visibleSteps, setVisibleSteps] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [leadInfo, setLeadInfo] = useState({});
@@ -119,31 +123,35 @@ const KycWizard = () => {
   );
 
   const QualifiedComponent = () => (
-    <View style={styles.stepComponentContainer}>
-      <Text style={styles.stepComponentTitle}>Qualification Check</Text>
-      <Text style={styles.stepComponentText}>Verify eligibility based on criteria like credit score and qualifications.</Text>
-    </View>
+    // <View style={styles.stepComponentContainer}>
+    //   <Text style={styles.stepComponentTitle}>Qualification Check</Text>
+    //   <Text style={styles.stepComponentText}>Verify eligibility based on criteria like credit score and qualifications.</Text>
+    // </View>
+    <Qualified />
   );
 
   const BankLoanProcessComponent = () => (
-    <View style={styles.stepComponentContainer}>
-      <Text style={styles.stepComponentTitle}>Bank Loan Application</Text>
-      <Text style={styles.stepComponentText}>Submit loan application, track approval status, and handle documentation.</Text>
-    </View>
+    // <View style={styles.stepComponentContainer}>
+    //   <Text style={styles.stepComponentTitle}>Bank Loan Application</Text>
+    //   <Text style={styles.stepComponentText}>Submit loan application, track approval status, and handle documentation.</Text>
+    // </View>
+    <BankLoan />
   );
 
   const PaymentReceivedComponent = () => (
-    <View style={styles.stepComponentContainer}>
-      <Text style={styles.stepComponentTitle}>Payment Confirmation</Text>
-      <Text style={styles.stepComponentText}>Record payment details, verify receipt, and update transaction status.</Text>
-    </View>
+    // <View style={styles.stepComponentContainer}>
+    //   <Text style={styles.stepComponentTitle}>Payment Confirmation</Text>
+    //   <Text style={styles.stepComponentText}>Record payment details, verify receipt, and update transaction status.</Text>
+    // </View>
+    <PaymentReceived />
   );
 
   const MaterialDispatchComponent = () => (
-    <View style={styles.stepComponentContainer}>
-      <Text style={styles.stepComponentTitle}>Material Dispatch</Text>
-      <Text style={styles.stepComponentText}>Schedule and track dispatch of materials to the installation site.</Text>
-    </View>
+    // <View style={styles.stepComponentContainer}>
+    //   <Text style={styles.stepComponentTitle}>Material Dispatch</Text>
+    //   <Text style={styles.stepComponentText}>Schedule and track dispatch of materials to the installation site.</Text>
+    // </View>
+    <MaterialDispatch />
   );
 
   const InstallationComponent = () => (
