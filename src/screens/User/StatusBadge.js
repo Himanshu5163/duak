@@ -25,7 +25,7 @@ const StatusBadge = ({ status }) => {
               ? '#d4edda'
               : status === 'pending'
               ? '#f8d7da'
-              : status === 'available'
+              : status === 'in-progress'
               ? '#e2e3e5'
               : '#e2e3e5', // Default for 'disabled'
         },
@@ -40,7 +40,7 @@ const StatusBadge = ({ status }) => {
                 ? '#155724'
                 : status === 'pending'
                 ? '#721c24'
-                : status === 'available'
+                : status === 'in-progress'
                 ? '#495057'
                 : '#495057',
           },
@@ -50,8 +50,8 @@ const StatusBadge = ({ status }) => {
           ? 'Completed'
           : status === 'pending'
           ? 'Pending'
-          : status === 'available'
-          ? 'Available'
+          : status === 'in-progress'
+          ? 'In Progress'
           : 'Pending'}
       </Text>
     </Animated.View>

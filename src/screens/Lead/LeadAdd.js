@@ -20,7 +20,7 @@ import { fetchDistricts, clearDistricts } from '../../redux/districtSlice';
 import { fetchCities, clearCities } from '../../redux/citySlice';
 import { fetchLeadSources } from '../../redux/leadSourceSlice';
 
-const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded }) => {
+const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded ,selectedStep}) => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
   const { states, status: stateStatus } = useSelector(state => state.state);
@@ -34,6 +34,7 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded }) => {
     state_id: leadInfo?.state_id || '',
     district_id: leadInfo?.district_id || '',
     city_id: leadInfo?.city_id || '',
+    sub_district_id: leadInfo?.sub_district_id || '',
     zip_code: leadInfo?.zip_code || '',
     lead_source_id: leadInfo?.lead_source_id || '',
     notes: leadInfo?.notes || '',
@@ -127,13 +128,15 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded }) => {
   );
 
   const handleSubmit = async () => {
+    
     if (!validateForm()) return;
     setIsSubmitting(true);
     try {
       const token = await getToken();
       const payload = new FormData();
-      payload.append('added_by', user.id);
-      payload.append('modal_type', 'Lead');
+      payload.append('updated_by', user.id);
+      payload.append('client_id', user.id);
+      payload.append('role_id', user.role_id);
       Object.keys(formData).forEach(key => {
         if (formData[key]) payload.append(key, formData[key]);
       });
@@ -143,10 +146,10 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded }) => {
       let successMessage = '';
 
       if (isEditing) {
-        apiUrl = `${Strings.APP_BASE_URL}/lead-update/${leadInfo.id}`;
-        method = 'PUT';
+        apiUrl = `${Strings.APP_BASE_URL}/lead-update/${user.id}`;
+        method = 'POST';
         successMessage = 'Lead updated successfully';
-        payload.append('lead_id', leadInfo.id);
+ 
       } else {
         apiUrl = `${Strings.APP_BASE_URL}/lead-create`;
         method = 'POST';
@@ -161,14 +164,15 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded }) => {
       const data = await response.json();
 
       if (response.ok) {
-        Alert.alert('Success', successMessage);
+       console.log('Lead response data:', data);
         if (!isEditing) {
+
           setFormData({ email: '', address: '', state_id: '', district_id: '', city_id: '', zip_code: '', lead_source_id: '', notes: '' });
           dispatch(clearDistricts());
           dispatch(clearCities());
         }
         if (onLeadAdded) {
-          onLeadAdded(data.lead); // Assuming the API returns the updated lead
+          onLeadAdded(); // Assuming the API returns the updated lead
         }
       } else {
         if (data.errors) setErrors(data.errors);
@@ -184,6 +188,8 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded }) => {
 
   return (
     <View style={styles.formContainer}>
+
+      
       {/* <Text style={styles.sectionTitle}>{label}</Text> */}
 
       {/* Email */}

@@ -51,14 +51,14 @@ const KycWizard = () => {
     setIsLoading(true);
     try {
       const token = await getToken();
-      const response = await fetch(`${Strings.APP_BASE_URL}/client-workflow-steps`, {
+      const response = await fetch(`${Strings.APP_BASE_URL}/client-workflow-steps/${user.mobile}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json',
         },
       });
-
+ 
       const data = await response.json();
 
       if (response.ok && data.status) {
@@ -75,6 +75,10 @@ const KycWizard = () => {
     }
   };
 
+  const onLeadAdded = async () => {
+fetchWorkflowSteps();
+    handleFetchLeadInfo(user.mobile);
+  }
   const handleFetchLeadInfo = async (client_mobile) => {
     setIsLoading(true);
     try {
@@ -115,7 +119,9 @@ const KycWizard = () => {
   );
 
   const LeadComponent = () => (
-    <LeadAdd leadInfo={leadInfo} />
+   
+    <LeadAdd leadInfo={leadInfo} onLeadAdded={onLeadAdded}/>
+    
   );
 
   const QualifiedComponent = () => (
@@ -248,7 +254,7 @@ const KycWizard = () => {
   };
 
   const stepComponents = {
-    lead: LeadComponent,
+    lead: LeadComponent ,
     document: DocumentComponent,
     qualified: QualifiedComponent,
     bank_loan_process: BankLoanProcessComponent,
@@ -350,7 +356,7 @@ const KycWizard = () => {
         </View>
         <Text style={styles.contentDescription}>{selectedStep.description}</Text>
         <View style={styles.contentArea}>
-          {StepComp ? <StepComp /> : (
+          {StepComp ? <StepComp selectedStep={selectedStep} /> : (
             <View style={styles.contentPlaceholder}>
               <Icon name={selectedStep.icon} size={48} color="#9ca3af" />
               <Text style={styles.contentPlaceholderTitle}>
