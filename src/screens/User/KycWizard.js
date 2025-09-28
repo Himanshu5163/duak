@@ -24,6 +24,8 @@ import Qualified from '../Lead/Qualified';
 import BankLoan from '../Lead/BankLoan';
 import PaymentReceived from '../Lead/PaymentReceived';
 import MaterialDispatch from '../Lead/MaterialDispatch';
+import Installation from '../Lead/Installation';
+import DownloadDocument from '../Lead/DownloadDocument';
 const { width } = Dimensions.get('window');
 
 const KycWizard = () => {
@@ -161,17 +163,19 @@ fetchWorkflowSteps();
   );
 
   const InstallationComponent = () => (
-    <View style={styles.stepComponentContainer}>
-      <Text style={styles.stepComponentTitle}>Installation Setup</Text>
-      <Text style={styles.stepComponentText}>Coordinate installation, assign technicians, and monitor progress.</Text>
-    </View>
+    // <View style={styles.stepComponentContainer}>
+    //   <Text style={styles.stepComponentTitle}>Installation Setup</Text>
+    //   <Text style={styles.stepComponentText}>Coordinate installation, assign technicians, and monitor progress.</Text>
+    // </View>
+    <Installation />
   );
 
   const NetMeteringComponent = () => (
-    <View style={styles.stepComponentContainer}>
-      <Text style={styles.stepComponentTitle}>Net Metering Configuration</Text>
-      <Text style={styles.stepComponentText}>Set up net metering, perform testing, and ensure grid compliance.</Text>
-    </View>
+    // <View style={styles.stepComponentContainer}>
+    //   <Text style={styles.stepComponentTitle}>Net Metering Configuration</Text>
+    //   <Text style={styles.stepComponentText}>Set up net metering, perform testing, and ensure grid compliance.</Text>
+    // </View>
+    <DownloadDocument />
   );
 
   const SubsidyComponent = () => (
