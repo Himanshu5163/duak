@@ -46,37 +46,65 @@ const KycWizard = () => {
 
   const [workflowSteps, setWorkflowSteps] = useState([]);
 
-  const handleDocumentsChange = (updatedDocuments) => {
+  const handleDocumentsChange = async updatedDocuments => {
     console.log('Documents updated:', updatedDocuments);
     setDocuments(updatedDocuments);
     if (updatedDocuments.length > 0) {
-      setWorkflowSteps((prevSteps) =>
-        prevSteps.map((step) =>
-          step.key === 'document' ? { ...step, status: 'completed' } : step
-        ) 
+      setWorkflowSteps(prevSteps =>
+        prevSteps.map(step =>
+          step.key === 'document' ? { ...step, status: 'completed' } : step,
+        ),
       );
-    } 
+
+      try {
+        const token = await getToken();
+        const response = await fetch(
+          `${Strings.APP_BASE_URL}/document-upload`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`, // if auth is needed
+            },
+            body: JSON.stringify({
+              documents: updatedDocuments,
+            }),
+          },
+        );
+
+        const data = await response.json();
+        console.log('API Response:', data);
+      } catch (error) {
+        console.error('Error sending documents:', error);
+      }
+    }
   };
 
   const fetchWorkflowSteps = async () => {
     setIsLoading(true);
     try {
       const token = await getToken();
-      const response = await fetch(`${Strings.APP_BASE_URL}/client-workflow-steps/${user.mobile}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
+      const response = await fetch(
+        `${Strings.APP_BASE_URL}/client-workflow-steps/${user.mobile}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
         },
-      });
- 
+      );
+
       const data = await response.json();
 
       if (response.ok && data.status) {
         setWorkflowSteps(data.data.map(step => ({ ...step, id: step.id })));
         console.log('Workflow steps fetched:', data.data);
-      } else { 
-        Alert.alert('Failed', data.message || 'Unable to fetch workflow steps.');
+      } else {
+        Alert.alert(
+          'Failed',
+          data.message || 'Unable to fetch workflow steps.',
+        );
       }
     } catch (error) {
       console.error('Error fetching workflow steps:', error);
@@ -89,20 +117,22 @@ const KycWizard = () => {
   const onLeadAdded = async () => {
     fetchWorkflowSteps();
     handleFetchLeadInfo(user.mobile);
-  }
-  const handleFetchLeadInfo = async (client_mobile) => {
+  };
+  const handleFetchLeadInfo = async client_mobile => {
     setIsLoading(true);
     try {
       const token = await getToken();
       const response = await fetch(
-        `${Strings.APP_BASE_URL}/client-workflow?client_mobile=${encodeURIComponent(client_mobile)}`,
+        `${
+          Strings.APP_BASE_URL
+        }/client-workflow?client_mobile=${encodeURIComponent(client_mobile)}`,
         {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
           },
-        }
+        },
       );
 
       const data = await response.json();
@@ -112,7 +142,10 @@ const KycWizard = () => {
           setLeadInfo(data.lead || data.data);
           console.log('Lead info fetched:', data.lead || data.data);
         } else {
-          Alert.alert('Failed', data.message || 'Unable to fetch lead information.');
+          Alert.alert(
+            'Failed',
+            data.message || 'Unable to fetch lead information.',
+          );
         }
       } else {
         Alert.alert('Error', data.message || 'Something went wrong.');
@@ -129,8 +162,6 @@ const KycWizard = () => {
     <DocumentUploader onDocumentsChange={handleDocumentsChange} />
   );
 
-
-
   const QualifiedComponent = () => (
     // <View style={styles.stepComponentContainer}>
     //   <Text style={styles.stepComponentTitle}>Qualification Check</Text>
@@ -142,21 +173,28 @@ const KycWizard = () => {
   const BankLoanProcessComponent = () => (
     <View style={styles.stepComponentContainer}>
       <Text style={styles.stepComponentTitle}>Bank Loan Application</Text>
-      <Text style={styles.stepComponentText}>Submit loan application, track approval status, and handle documentation.</Text>
+      <Text style={styles.stepComponentText}>
+        Submit loan application, track approval status, and handle
+        documentation.
+      </Text>
     </View>
   );
 
   const PaymentReceivedComponent = () => (
     <View style={styles.stepComponentContainer}>
       <Text style={styles.stepComponentTitle}>Payment Confirmation</Text>
-      <Text style={styles.stepComponentText}>Record payment details, verify receipt, and update transaction status.</Text>
+      <Text style={styles.stepComponentText}>
+        Record payment details, verify receipt, and update transaction status.
+      </Text>
     </View>
   );
 
   const MaterialDispatchComponent = () => (
     <View style={styles.stepComponentContainer}>
       <Text style={styles.stepComponentTitle}>Material Dispatch</Text>
-      <Text style={styles.stepComponentText}>Schedule and track dispatch of materials to the installation site.</Text>
+      <Text style={styles.stepComponentText}>
+        Schedule and track dispatch of materials to the installation site.
+      </Text>
     </View>
   );
 
@@ -179,14 +217,19 @@ const KycWizard = () => {
   const SubsidyComponent = () => (
     <View style={styles.stepComponentContainer}>
       <Text style={styles.stepComponentTitle}>Subsidy Processing</Text>
-      <Text style={styles.stepComponentText}>Apply for subsidies, submit documents, and track approval.</Text>
+      <Text style={styles.stepComponentText}>
+        Apply for subsidies, submit documents, and track approval.
+      </Text>
     </View>
   );
 
   const DisbursedComponent = () => (
     <View style={styles.stepComponentContainer}>
       <Text style={styles.stepComponentTitle}>Final Disbursement</Text>
-      <Text style={styles.stepComponentText}>Complete final payments, close project, and generate completion certificate.</Text>
+      <Text style={styles.stepComponentText}>
+        Complete final payments, close project, and generate completion
+        certificate.
+      </Text>
     </View>
   );
 
@@ -221,15 +264,21 @@ const KycWizard = () => {
   }, [currentStep, user]);
 
   useEffect(() => {
-    const currentStepData = visibleSteps.find((step) => step.id === currentStep);
-    if (currentStepData && currentStepData.status === 'completed' && currentStep < visibleSteps.length) {
+    const currentStepData = visibleSteps.find(step => step.id === currentStep);
+    if (
+      currentStepData &&
+      currentStepData.status === 'completed' &&
+      currentStep < visibleSteps.length
+    ) {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
       setSelectedStepId(nextStep);
-      setWorkflowSteps((prevSteps) =>
-        prevSteps.map((step) =>
-          step.id === nextStep && step.status === 'disabled' ? { ...step, status: 'pending' } : step
-        )
+      setWorkflowSteps(prevSteps =>
+        prevSteps.map(step =>
+          step.id === nextStep && step.status === 'disabled'
+            ? { ...step, status: 'pending' }
+            : step,
+        ),
       );
     }
   }, [visibleSteps, currentStep]);
@@ -238,32 +287,30 @@ const KycWizard = () => {
     centerTab(selectedStepId);
   }, [selectedStepId]);
 
-  const centerTab = (stepId) => {
+  const centerTab = stepId => {
     const tabRef = tabRefs.current[stepId - 1];
     if (tabRef && tabScrollViewRef.current) {
       tabRef.measureLayout(
         tabScrollViewRef.current,
         (x, y, width, height) => {
-          const center = x - (Dimensions.get('window').width / 2) + (width / 2);
+          const center = x - Dimensions.get('window').width / 2 + width / 2;
           tabScrollViewRef.current.scrollTo({ x: center, animated: true });
         },
-        () => {}
+        () => {},
       );
     }
   };
 
-  const getStepStatus = (stepId) => {
-    const step = visibleSteps.find((s) => s.id === stepId);
+  const getStepStatus = stepId => {
+    const step = visibleSteps.find(s => s.id === stepId);
     return step ? step.status : 'disabled';
   };
 
-  const handleTabPress = (step) => {
+  const handleTabPress = step => {
     const status = getStepStatus(step.id);
     if (status === 'disabled') return;
     setSelectedStepId(step.id);
   };
-
-  
 
   const TabItem = ({ step, index }) => {
     const status = getStepStatus(step.id);
@@ -273,7 +320,11 @@ const KycWizard = () => {
     return (
       <TouchableOpacity
         ref={el => (tabRefs.current[index] = el)}
-        style={[styles.tabItem, isSelected && styles.selectedTabItem, isDisabled && styles.disabledTabItem]}
+        style={[
+          styles.tabItem,
+          isSelected && styles.selectedTabItem,
+          isDisabled && styles.disabledTabItem,
+        ]}
         onPress={() => handleTabPress(step)}
         disabled={isDisabled}
         activeOpacity={0.7}
@@ -282,7 +333,7 @@ const KycWizard = () => {
           <Icon
             name={step.icon}
             size={20}
-            color={isSelected ? '#1a237e' : (isDisabled ? '#9ca3af' : '#424982')}
+            color={isSelected ? '#1a237e' : isDisabled ? '#9ca3af' : '#424982'}
           />
           {status === 'completed' && (
             <View style={styles.completedCheck}>
@@ -300,13 +351,17 @@ const KycWizard = () => {
         >
           {step.label}
         </Text>
-        {isSelected && <View style={[styles.tabIndicator, { backgroundColor: '#1a237e' }]} />}
+        {isSelected && (
+          <View style={[styles.tabIndicator, { backgroundColor: '#1a237e' }]} />
+        )}
       </TouchableOpacity>
     );
   };
 
   const ProgressBar = () => {
-    const completedCount = visibleSteps.filter(step => step.status === 'completed').length;
+    const completedCount = visibleSteps.filter(
+      step => step.status === 'completed',
+    ).length;
     const progressPercentage = (completedCount / visibleSteps.length) * 100;
 
     return (
@@ -321,10 +376,7 @@ const KycWizard = () => {
         </View>
         <View style={styles.progressBarContainer}>
           <View
-            style={[
-              styles.progressBar,
-              { width: `${progressPercentage}%` }
-            ]}
+            style={[styles.progressBar, { width: `${progressPercentage}%` }]}
           />
         </View>
       </View>
@@ -350,19 +402,29 @@ const KycWizard = () => {
     const selectedStep = visibleSteps.find(s => s.id === selectedStepId);
     if (!selectedStep) return null;
 
-  
-const stepComponents = {
-    lead: () => <LeadAdd leadInfo={leadInfo} onLeadAdded={onLeadAdded} selectedStep={selectedStep} />,
-    document: () => <DocumentUploader onDocumentsChange={handleDocumentsChange} selectedStep={selectedStep} />,
-    qualified: () => <Qualified selectedStep={selectedStep}/>,
-    bank_loan_process: () => <BankLoan />,
-    payment_received: () => <PaymentReceived selectedStep={selectedStep}/>,
-    material_dispatch: () => <MaterialDispatch selectedStep={selectedStep}/>,
-    installation: () => <Installation selectedStep={selectedStep}/>,
-    net_metering: () => <NetMetering selectedStep={selectedStep}/>,
-    subsidy: () => <Subsidy selectedStep={selectedStep}/>,
-    disbursed: () => <Disbursed selectedStep={selectedStep}/>,
-  };
+    const stepComponents = {
+      lead: () => (
+        <LeadAdd
+          leadInfo={leadInfo}
+          onLeadAdded={onLeadAdded}
+          selectedStep={selectedStep}
+        />
+      ),
+      document: () => (
+        <DocumentUploader
+          onDocumentsChange={handleDocumentsChange}
+          selectedStep={selectedStep}
+        />
+      ),
+      qualified: () => <Qualified selectedStep={selectedStep} />,
+      bank_loan_process: () => <BankLoan />,
+      payment_received: () => <PaymentReceived selectedStep={selectedStep} />,
+      material_dispatch: () => <MaterialDispatch selectedStep={selectedStep} />,
+      installation: () => <Installation selectedStep={selectedStep} />,
+      net_metering: () => <NetMetering selectedStep={selectedStep} />,
+      subsidy: () => <Subsidy selectedStep={selectedStep} />,
+      disbursed: () => <Disbursed selectedStep={selectedStep} />,
+    };
     const StepComp = stepComponents[selectedStep.key];
     return (
       <View style={styles.contentContainer}>
@@ -380,16 +442,21 @@ const stepComponents = {
             <StatusBadge status={selectedStep.status} />
           </View>
         </View>
-        <Text style={styles.contentDescription}>{selectedStep.description}</Text>
+        <Text style={styles.contentDescription}>
+          {selectedStep.description}
+        </Text>
         <View style={styles.contentArea}>
-          {StepComp ? <StepComp  /> : (
+          {StepComp ? (
+            <StepComp />
+          ) : (
             <View style={styles.contentPlaceholder}>
               <Icon name={selectedStep.icon} size={48} color="#9ca3af" />
               <Text style={styles.contentPlaceholderTitle}>
                 {selectedStep.label} Management
               </Text>
               <Text style={styles.contentPlaceholderText}>
-                This section contains the workflow management interface for {selectedStep.label.toLowerCase()}.
+                This section contains the workflow management interface for{' '}
+                {selectedStep.label.toLowerCase()}.
               </Text>
             </View>
           )}
@@ -411,7 +478,9 @@ const stepComponents = {
       <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Workflow Management</Text>
-        <Text style={styles.headerSubtitle}>Track and manage your project progress</Text>
+        <Text style={styles.headerSubtitle}>
+          Track and manage your project progress
+        </Text>
       </View>
       <ProgressBar />
       {isLoading ? (
@@ -432,8 +501,8 @@ const stepComponents = {
               <TabItem key={step.key} step={step} index={index} />
             ))}
           </ScrollView>
-          <ScrollView 
-            style={styles.contentScrollView} 
+          <ScrollView
+            style={styles.contentScrollView}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -449,44 +518,211 @@ const stepComponents = {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fafafa' },
-  header: { paddingHorizontal: 20, paddingVertical: 20, backgroundColor: '#fff', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#e0e0e0' },
-  headerTitle: { fontSize: 26, fontWeight: '700', color: '#1a237e', marginBottom: 4 },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#e0e0e0',
+  },
+  headerTitle: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#1a237e',
+    marginBottom: 4,
+  },
   headerSubtitle: { fontSize: 14, color: '#757575' },
-  progressContainer: { backgroundColor: '#fff', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  progressHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  progressContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   progressText: { fontSize: 13, fontWeight: '500', color: '#555' },
   progressPercentage: { fontSize: 13, fontWeight: '600', color: '#1a237e' },
-  progressBarContainer: { height: 6, backgroundColor: '#e0e0e0', borderRadius: 3, overflow: 'hidden' },
+  progressBarContainer: {
+    height: 6,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
   progressBar: { height: '100%', backgroundColor: '#1a237e', borderRadius: 3 },
-  tabScrollView: { maxHeight: 90, backgroundColor: '#fff', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#e0e0e0', paddingTop: 8 },
+  tabScrollView: {
+    maxHeight: 90,
+    backgroundColor: '#fff',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#e0e0e0',
+    paddingTop: 8,
+  },
   tabContentContainer: { paddingHorizontal: 12 },
-  tabItem: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingVertical: 8, marginHorizontal: 4, minWidth: 90, borderRadius: 12 },
+  tabItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginHorizontal: 4,
+    minWidth: 90,
+    borderRadius: 12,
+  },
   selectedTabItem: { backgroundColor: '#f5f5f5' },
-  tabIndicator: { position: 'absolute', bottom: 0, height: 4, width: '60%', borderRadius: 2, alignSelf: 'center' },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    height: 4,
+    width: '60%',
+    borderRadius: 2,
+    alignSelf: 'center',
+  },
   disabledTabItem: { opacity: 0.6 },
-  tabIconContainer: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', backgroundColor: '#e0e0e0', marginBottom: 4 },
-  completedCheck: { position: 'absolute', top: -2, right: -2, backgroundColor: '#388e3c', width: 16, height: 16, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  tabTitle: { fontSize: 11, fontWeight: '500', color: '#757575', textAlign: 'center' },
+  tabIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#e0e0e0',
+    marginBottom: 4,
+  },
+  completedCheck: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#388e3c',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  tabTitle: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#757575',
+    textAlign: 'center',
+  },
   selectedTabTitle: { fontWeight: '600', color: '#1a237e' },
   disabledText: { color: '#9ca3af' },
   contentScrollView: { flex: 1, backgroundColor: '#fafafa' },
-  contentContainer: { backgroundColor: '#ffffff', margin: 20, borderRadius: 16, padding: 24, ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 10 }, android: { elevation: 6 } }) },
-  contentHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  contentIconContainer: { width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', marginRight: 16, ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 8 }, android: { elevation: 4 } }) },
+  contentContainer: {
+    backgroundColor: '#ffffff',
+    margin: 20,
+    borderRadius: 16,
+    padding: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+      },
+      android: { elevation: 6 },
+    }),
+  },
+  contentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  contentIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+      },
+      android: { elevation: 4 },
+    }),
+  },
   contentHeaderText: { flex: 1 },
-  contentTitle: { fontSize: 22, fontWeight: '700', color: '#111', marginBottom: 4 },
-  contentDescription: { fontSize: 16, color: '#6b7280', lineHeight: 24, marginBottom: 24 },
+  contentTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#111',
+    marginBottom: 4,
+  },
+  contentDescription: {
+    fontSize: 16,
+    color: '#6b7280',
+    lineHeight: 24,
+    marginBottom: 24,
+  },
   contentArea: { marginBottom: 28 },
-  contentPlaceholder: { backgroundColor: '#f5f5f5', borderRadius: 12, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: '#e0e0e0' },
-  contentPlaceholderTitle: { fontSize: 18, fontWeight: '600', color: '#374151', marginBottom: 8 },
-  contentPlaceholderText: { fontSize: 14, color: '#6b7280', textAlign: 'center', lineHeight: 20 },
-  contentFooter: { flexDirection: 'row', justifyContent: 'flex-start', gap: 12 },
-  backButton: { paddingVertical: 14, paddingHorizontal: 20, borderRadius: 10, alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#e0e0e0' },
+  contentPlaceholder: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    padding: 32,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  contentPlaceholderTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  contentPlaceholderText: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  contentFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    gap: 12,
+  },
+  backButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
   backButtonText: { fontSize: 16, fontWeight: '600', color: '#555' },
-  stepComponentContainer: { backgroundColor: '#f9fafb', borderRadius: 12, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb' },
-  stepComponentTitle: { fontSize: 18, fontWeight: '600', color: '#374151', marginBottom: 8 },
-  stepComponentText: { fontSize: 14, color: '#6b7280', textAlign: 'center', lineHeight: 20 },
-  loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(255, 255, 255, 0.8)', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
+  stepComponentContainer: {
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    padding: 32,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  stepComponentTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  stepComponentText: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
   loadingText: { marginTop: 10, fontSize: 16, color: '#1a237e' },
 });
 

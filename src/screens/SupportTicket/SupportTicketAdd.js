@@ -85,6 +85,8 @@ const SupportTicketAdd = () => {
       });
     }
 
+    // console.log('image',formDataToSend);
+
      const response = await fetch(`${Strings.APP_BASE_URL}/ticket-generate`, {
       method: 'POST',
       body: formDataToSend,

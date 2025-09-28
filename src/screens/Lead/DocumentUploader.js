@@ -16,6 +16,7 @@ import { Picker } from '@react-native-picker/picker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import LinearGradient from 'react-native-linear-gradient';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import { useSelector } from 'react-redux';
 
 const documentCategories = [
   { id: 1, name: 'Passport' },
@@ -54,6 +55,7 @@ const oldDocuments = [
 const DocumentUploader = ({ onDocumentsChange, selectedStep }) => {
   const [documents, setDocuments] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
+  const { user } = useSelector(state => state.auth);
 
   // Log the onDocumentsChange prop for debugging
   console.log('onDocumentsChange prop:', onDocumentsChange);
@@ -189,6 +191,8 @@ const DocumentUploader = ({ onDocumentsChange, selectedStep }) => {
         type: newFile.type || 'image/jpeg',
         name: newFile.fileName || `document_${Date.now()}.jpg`,
         category: selectedCategory,
+        mobile: user.mobile,
+        key: 'document',
       };
       const updatedDocuments = [...documents, fileData];
       setDocuments(updatedDocuments);
