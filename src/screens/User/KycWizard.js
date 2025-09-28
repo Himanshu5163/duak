@@ -26,6 +26,9 @@ import PaymentReceived from '../Lead/PaymentReceived';
 import MaterialDispatch from '../Lead/MaterialDispatch';
 import Installation from '../Lead/Installation';
 import DownloadDocument from '../Lead/DownloadDocument';
+import NetMetering from '../Lead/NetMetering';
+import Subsidy from '../Lead/Subsidy';
+import Disbursed from '../Lead/Disbursed';
 const { width } = Dimensions.get('window');
 
 const KycWizard = () => {
@@ -127,10 +130,11 @@ fetchWorkflowSteps();
 
 
   const QualifiedComponent = () => (
-    <View style={styles.stepComponentContainer}>
-      <Text style={styles.stepComponentTitle}>Qualification Check</Text>
-      <Text style={styles.stepComponentText}>Verify eligibility based on criteria like credit score and qualifications.</Text>
-    </View>
+    // <View style={styles.stepComponentContainer}>
+    //   <Text style={styles.stepComponentTitle}>Qualification Check</Text>
+    //   <Text style={styles.stepComponentText}>Verify eligibility based on criteria like credit score and qualifications.</Text>
+    // </View>
+    <Qualified />
   );
 
   const BankLoanProcessComponent = () => (
@@ -332,15 +336,15 @@ fetchWorkflowSteps();
   
 const stepComponents = {
     lead: () => <LeadAdd leadInfo={leadInfo} onLeadAdded={onLeadAdded} selectedStep={selectedStep} />,
-    document: DocumentComponent,
-    qualified: QualifiedComponent,
-    bank_loan_process: BankLoanProcessComponent,
-    payment_received: PaymentReceivedComponent,
-    material_dispatch: MaterialDispatchComponent,
-    installation: InstallationComponent,
-    net_metering: NetMeteringComponent,
-    subsidy: SubsidyComponent,
-    disbursed: DisbursedComponent,
+    document: () => <DocumentUploader onDocumentsChange={handleDocumentsChange} selectedStep={selectedStep} />,
+    qualified: () => <Qualified selectedStep={selectedStep}/>,
+    bank_loan_process: () => <BankLoan />,
+    payment_received: () => <PaymentReceived selectedStep={selectedStep}/>,
+    material_dispatch: () => <MaterialDispatch selectedStep={selectedStep}/>,
+    installation: () => <Installation selectedStep={selectedStep}/>,
+    net_metering: () => <NetMetering selectedStep={selectedStep}/>,
+    subsidy: () => <Subsidy selectedStep={selectedStep}/>,
+    disbursed: () => <Disbursed selectedStep={selectedStep}/>,
   };
     const StepComp = stepComponents[selectedStep.key];
     return (

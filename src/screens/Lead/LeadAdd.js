@@ -21,7 +21,12 @@ import { fetchDistricts, clearDistricts } from '../../redux/districtSlice';
 import { fetchCities, clearCities } from '../../redux/citySlice';
 import { fetchLeadSources } from '../../redux/leadSourceSlice';
 
-const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded , selectedStep }) => {
+const LeadAdd = ({
+  label = 'Add Lead',
+  leadInfo = null,
+  onLeadAdded,
+  selectedStep,
+}) => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
   const { states, status: stateStatus } = useSelector(state => state.state);
@@ -54,11 +59,19 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded , selectedSt
   const validateForm = () => {
     let valid = true;
     let newErrors = {};
-    const requiredFields = ['email', 'state_id', 'district_id', 'city_id', 'lead_source_id'];
+    const requiredFields = [
+      'email',
+      'state_id',
+      'district_id',
+      'city_id',
+      'lead_source_id',
+    ];
 
     requiredFields.forEach(field => {
       if (!formData[field]) {
-        newErrors[field] = `${field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} is required`;
+        newErrors[field] = `${field
+          .replace(/_/g, ' ')
+          .replace(/\b\w/g, l => l.toUpperCase())} is required`;
         valid = false;
       }
     });
@@ -68,7 +81,11 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded , selectedSt
       valid = false;
     }
 
-    if (formData.zip_code && formData.zip_code && !/^\d{5,6}$/.test(formData.zip_code)) {
+    if (
+      formData.zip_code &&
+      formData.zip_code &&
+      !/^\d{5,6}$/.test(formData.zip_code)
+    ) {
       newErrors.zip_code = 'Zip code must be 5 or 6 digits';
       valid = false;
     }
@@ -87,7 +104,7 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded , selectedSt
         }
       };
       loadData();
-    }, [dispatch])
+    }, [dispatch]),
   );
 
   useFocusEffect(
@@ -100,14 +117,20 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded , selectedSt
           return;
         }
         const token = await getToken();
-        dispatch(fetchDistricts({ API_URL: Strings.APP_BASE_URL, token, state_id: formData.state_id }));
+        dispatch(
+          fetchDistricts({
+            API_URL: Strings.APP_BASE_URL,
+            token,
+            state_id: formData.state_id,
+          }),
+        );
         if (!isEditing) {
           setFormData(prev => ({ ...prev, district_id: '', city_id: '' }));
           dispatch(clearCities());
         }
       };
       loadDistricts();
-    }, [dispatch, formData.state_id, isEditing])
+    }, [dispatch, formData.state_id, isEditing]),
   );
 
   useFocusEffect(
@@ -119,17 +142,22 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded , selectedSt
           return;
         }
         const token = await getToken();
-        dispatch(fetchCities({ API_URL: Strings.APP_BASE_URL, token, district_id: formData.district_id }));
+        dispatch(
+          fetchCities({
+            API_URL: Strings.APP_BASE_URL,
+            token,
+            district_id: formData.district_id,
+          }),
+        );
         if (!isEditing) {
           setFormData(prev => ({ ...prev, city_id: '' }));
         }
       };
       loadCities();
-    }, [dispatch, formData.district_id, isEditing])
+    }, [dispatch, formData.district_id, isEditing]),
   );
 
   const handleSubmit = async () => {
-    
     if (!validateForm()) return;
     setIsSubmitting(true);
     try {
@@ -150,7 +178,6 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded , selectedSt
         apiUrl = `${Strings.APP_BASE_URL}/lead-update/${user.id}`;
         method = 'POST';
         successMessage = 'Lead updated successfully';
- 
       } else {
         apiUrl = `${Strings.APP_BASE_URL}/lead-create`;
         method = 'POST';
@@ -165,10 +192,18 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded , selectedSt
       const data = await response.json();
 
       if (response.ok) {
-       console.log('Lead response data:', data);
+        console.log('Lead response data:', data);
         if (!isEditing) {
-
-          setFormData({ email: '', address: '', state_id: '', district_id: '', city_id: '', zip_code: '', lead_source_id: '', notes: '' });
+          setFormData({
+            email: '',
+            address: '',
+            state_id: '',
+            district_id: '',
+            city_id: '',
+            zip_code: '',
+            lead_source_id: '',
+            notes: '',
+          });
           dispatch(clearDistricts());
           dispatch(clearCities());
         }
@@ -187,197 +222,207 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded , selectedSt
     }
   };
 
+  if (selectedStep.status === 'pending') {
+    return (
+      <View style={styles.formContainer}>
+        {/* <Text style={styles.sectionTitle}>{label}</Text> */}
 
+        {/* Email */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Email *</Text>
+          <TextInput
+            style={[styles.textInput, errors.email && styles.errorBorder]}
+            value={formData.email}
+            onChangeText={v => handleInputChange('email', v)}
+            placeholder="Enter Email"
+            placeholderTextColor="#9CA3AF"
+            keyboardType="email-address"
+          />
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+        </View>
 
-if(selectedStep.status==='pending'){
-return (
-    <View style={styles.formContainer}>
-      {/* <Text style={styles.sectionTitle}>{label}</Text> */}
+        {/* State */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>State *</Text>
+          <View style={styles.pickerContainer}>
+            {stateStatus === 'loading' ? (
+              <View style={styles.loadingOverlay}>
+                <ActivityIndicator size="small" color="#2C3E50" />
+              </View>
+            ) : (
+              <Picker
+                selectedValue={formData.state_id}
+                onValueChange={v => handleInputChange('state_id', v)}
+                style={[styles.picker, errors.state_id && styles.errorBorder]}
+              >
+                <Picker.Item label="Select State" value="" />
+                {states.map(s => (
+                  <Picker.Item key={s.id} label={s.name} value={s.id} />
+                ))}
+              </Picker>
+            )}
+          </View>
+          {errors.state_id && (
+            <Text style={styles.errorText}>{errors.state_id}</Text>
+          )}
+        </View>
 
-      {/* Email */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Email *</Text>
-        <TextInput
-          style={[styles.textInput, errors.email && styles.errorBorder]}
-          value={formData.email}
-          onChangeText={v => handleInputChange('email', v)}
-          placeholder="Enter Email"
-          placeholderTextColor="#9CA3AF"
-          keyboardType="email-address"
-        />
-        {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-      </View>
-
-      {/* State */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>State *</Text>
-        <View style={styles.pickerContainer}>
-          {stateStatus === 'loading' ? (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="small" color="#2C3E50" />
-            </View>
-          ) : (
+        {/* District */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>District *</Text>
+          <View style={styles.pickerContainer}>
             <Picker
-              selectedValue={formData.state_id}
-              onValueChange={v => handleInputChange('state_id', v)}
-              style={[styles.picker, errors.state_id && styles.errorBorder]}
+              selectedValue={formData.district_id}
+              onValueChange={v => handleInputChange('district_id', v)}
+              style={[styles.picker, errors.district_id && styles.errorBorder]}
             >
-              <Picker.Item label="Select State" value="" />
-              {states.map(s => (
-                <Picker.Item key={s.id} label={s.name} value={s.id} />
+              <Picker.Item label="Select District" value="" />
+              {districts.map(d => (
+                <Picker.Item key={d.id} label={d.name} value={d.id} />
               ))}
             </Picker>
+          </View>
+          {errors.district_id && (
+            <Text style={styles.errorText}>{errors.district_id}</Text>
           )}
         </View>
-        {errors.state_id && <Text style={styles.errorText}>{errors.state_id}</Text>}
-      </View>
 
-      {/* District */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>District *</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={formData.district_id}
-            onValueChange={v => handleInputChange('district_id', v)}
-            style={[styles.picker, errors.district_id && styles.errorBorder]}
-          >
-            <Picker.Item label="Select District" value="" />
-            {districts.map(d => (
-              <Picker.Item key={d.id} label={d.name} value={d.id} />
-            ))}
-          </Picker>
-        </View>
-        {errors.district_id && <Text style={styles.errorText}>{errors.district_id}</Text>}
-      </View>
-
-      {/* City */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>City *</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={formData.city_id}
-            onValueChange={v => handleInputChange('city_id', v)}
-            style={[styles.picker, errors.city_id && styles.errorBorder]}
-          >
-            <Picker.Item label="Select City" value="" />
-            {cities.map(c => (
-              <Picker.Item key={c.id} label={c.name} value={c.id} />
-            ))}
-          </Picker>
-        </View>
-        {errors.city_id && <Text style={styles.errorText}>{errors.city_id}</Text>}
-      </View>
-
-      {/* Zip Code */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Zip Code *</Text>
-        <TextInput
-          style={[styles.textInput, errors.zip_code && styles.errorBorder]}
-          value={formData.zip_code}
-          onChangeText={v => handleInputChange('zip_code', v)}
-          placeholder="Enter Zip Code"
-          placeholderTextColor="#9CA3AF"
-          keyboardType="numeric"
-        />
-        {errors.zip_code && <Text style={styles.errorText}>{errors.zip_code}</Text>}
-      </View>
-
-      {/* Lead Source */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Lead Source *</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={formData.lead_source_id}
-            onValueChange={v => handleInputChange('lead_source_id', v)}
-            style={[styles.picker, errors.lead_source_id && styles.errorBorder]}
-          >
-            <Picker.Item label="Select Source" value="" />
-            {leadSources.map(ls => (
-              <Picker.Item key={ls.id} label={ls.name} value={ls.id} />
-            ))}
-          </Picker>
-        </View>
-        {errors.lead_source_id && <Text style={styles.errorText}>{errors.lead_source_id}</Text>}
-      </View>
-
-      {/* Address */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Address</Text>
-        <TextInput
-          style={[styles.textInput, errors.address && styles.errorBorder, { height: 80 }]}
-          value={formData.address}
-          onChangeText={v => handleInputChange('address', v)}
-          placeholder="Enter Address"
-          placeholderTextColor="#9CA3AF"
-          multiline
-        />
-        {errors.address && <Text style={styles.errorText}>{errors.address}</Text>}
-      </View>
-
-      {/* Notes */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Notes</Text>
-        <TextInput
-          style={[styles.textInput, { height: 100 }]}
-          value={formData.notes}
-          onChangeText={v => handleInputChange('notes', v)}
-          placeholder="Enter Notes"
-          placeholderTextColor="#9CA3AF"
-          multiline
-        />
-      </View>
-
-      {/* Submit Button */}
-      <TouchableOpacity
-        onPress={handleSubmit}
-        disabled={isSubmitting}
-      >
-        <LinearGradient
-          colors={['#007BFF', '#28A745']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.gradient}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitButtonText}>{isEditing ? 'Update' : 'Submit'}</Text>
+        {/* City */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>City *</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={formData.city_id}
+              onValueChange={v => handleInputChange('city_id', v)}
+              style={[styles.picker, errors.city_id && styles.errorBorder]}
+            >
+              <Picker.Item label="Select City" value="" />
+              {cities.map(c => (
+                <Picker.Item key={c.id} label={c.name} value={c.id} />
+              ))}
+            </Picker>
+          </View>
+          {errors.city_id && (
+            <Text style={styles.errorText}>{errors.city_id}</Text>
           )}
-        </LinearGradient>
-      </TouchableOpacity>
-    </View>
-  );
-}
-else if(selectedStep.status==='in-progress'){
-return (
-    <View style={styles.contentPlaceholder}>
-<Icon name="hourglass-outline" size={48} color="#FFA500" /> // hourglass for pending
-                <Text style={styles.contentPlaceholderTitle}>
-                  Client Information
-                </Text>
-                <Text style={styles.contentPlaceholderText}>
-                 The information you have provided for  
-                 client information is 
-                 currently under verification by the admin.
-                  You will be notified once the verification is complete.
-                </Text>
-              </View>
-)
-}
-else if (selectedStep.status === 'completed') {
-  return (
-    <View style={styles.contentPlaceholder}>
-      <Icon name="checkmark-circle-outline" size={48} color="#28A745" /> {/* checkmark for completed */}
-      <Text style={styles.contentPlaceholderTitle}>
-        Client Information 
-      </Text>
-      <Text style={styles.contentPlaceholderText}>
-        Your client information has been successfully verified by the admin.
-      </Text>
-    </View> 
-  );
-}
-  
+        </View>
+
+        {/* Zip Code */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Zip Code *</Text>
+          <TextInput
+            style={[styles.textInput, errors.zip_code && styles.errorBorder]}
+            value={formData.zip_code}
+            onChangeText={v => handleInputChange('zip_code', v)}
+            placeholder="Enter Zip Code"
+            placeholderTextColor="#9CA3AF"
+            keyboardType="numeric"
+          />
+          {errors.zip_code && (
+            <Text style={styles.errorText}>{errors.zip_code}</Text>
+          )}
+        </View>
+
+        {/* Lead Source */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Lead Source *</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={formData.lead_source_id}
+              onValueChange={v => handleInputChange('lead_source_id', v)}
+              style={[
+                styles.picker,
+                errors.lead_source_id && styles.errorBorder,
+              ]}
+            >
+              <Picker.Item label="Select Source" value="" />
+              {leadSources.map(ls => (
+                <Picker.Item key={ls.id} label={ls.name} value={ls.id} />
+              ))}
+            </Picker>
+          </View>
+          {errors.lead_source_id && (
+            <Text style={styles.errorText}>{errors.lead_source_id}</Text>
+          )}
+        </View>
+
+        {/* Address */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Address</Text>
+          <TextInput
+            style={[
+              styles.textInput,
+              errors.address && styles.errorBorder,
+              { height: 80 },
+            ]}
+            value={formData.address}
+            onChangeText={v => handleInputChange('address', v)}
+            placeholder="Enter Address"
+            placeholderTextColor="#9CA3AF"
+            multiline
+          />
+          {errors.address && (
+            <Text style={styles.errorText}>{errors.address}</Text>
+          )}
+        </View>
+
+        {/* Notes */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Notes</Text>
+          <TextInput
+            style={[styles.textInput, { height: 100 }]}
+            value={formData.notes}
+            onChangeText={v => handleInputChange('notes', v)}
+            placeholder="Enter Notes"
+            placeholderTextColor="#9CA3AF"
+            multiline
+          />
+        </View>
+
+        {/* Submit Button */}
+        <TouchableOpacity onPress={handleSubmit} disabled={isSubmitting}>
+          <LinearGradient
+            colors={['#007BFF', '#28A745']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.gradient}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitButtonText}>
+                {isEditing ? 'Update' : 'Submit'}
+              </Text>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    );
+  } else if (selectedStep.status === 'in-progress') {
+    return (
+      <View style={styles.contentPlaceholder}>
+        <Icon name="hourglass-outline" size={48} color="#FFA500" /> // hourglass
+        for pending
+        <Text style={styles.contentPlaceholderTitle}>Client Information</Text>
+        <Text style={styles.contentPlaceholderText}>
+          The information you have provided for client information is currently
+          under verification by the admin. You will be notified once the
+          verification is complete.
+        </Text>
+      </View>
+    );
+  } else if (selectedStep.status === 'completed') {
+    return (
+      <View style={styles.contentPlaceholder}>
+        <Icon name="checkmark-circle-outline" size={48} color="#28A745" />{' '}
+        {/* checkmark for completed */}
+        <Text style={styles.contentPlaceholderTitle}>Client Information</Text>
+        <Text style={styles.contentPlaceholderText}>
+          Your client information has been successfully verified by the admin.
+        </Text>
+      </View>
+    );
+  }
 };
 
 const styles = StyleSheet.create({
@@ -442,9 +487,27 @@ const styles = StyleSheet.create({
   errorBorder: {
     borderColor: '#EF4444',
   },
-  contentPlaceholder: { backgroundColor: '#f5f5f5', borderRadius: 12, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: '#e0e0e0' },
-  contentPlaceholderTitle: { fontSize: 18, fontWeight: '600', color: '#374151', marginBottom: 8 ,marginTop:12 },
-  contentPlaceholderText: { fontSize: 14, color: '#6b7280', textAlign: 'center', lineHeight: 20 },
+  contentPlaceholder: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    padding: 32,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  contentPlaceholderTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+    marginTop: 12,
+  },
+  contentPlaceholderText: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
 });
 
 export default LeadAdd;

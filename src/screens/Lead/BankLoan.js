@@ -30,7 +30,7 @@ const BankLoan = () => {
     } else {
       // Logic for NO: Skipping loan step
       successText =
-        'Loan application step successfully skipped. Proceeding to the final stage.';
+        'Loan application step successfully skipped. Proceeding to the next stage.';
     }
 
     // Simulate a network request delay (e.g., 2 seconds)

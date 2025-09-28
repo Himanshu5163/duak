@@ -1,99 +1,71 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Icon from 'react-native-vector-icons/Ionicons';
 
-// Helper function to determine the content based on status
-const getStatusContent = (status) => {
-  switch (status) {
-    case 'complete':
-    case 'received':
-      return {
-        title: 'Payment Complete',
-        message: 'Your payment has been successfully received and processed. Thank you!',
-        iconName: 'check-circle',
-        color: '#28a745', // Green
-        bgColor: '#e6ffed', // Light Green
-      };
-    case 'in-progress':
-    case 'processing':
-      return {
-        title: 'Payment In Progress',
-        message: 'Your transaction is currently being processed. This may take a few moments.',
-        iconName: 'timer-sand',
-        color: '#ffc107', // Yellow/Orange
-        bgColor: '#fff3cd', // Light Yellow
-      };
-    case 'pending':
-    default:
-      return {
-        title: 'Payment Pending',
-        message: 'We are waiting for confirmation of your transaction. Please check back soon.',
-        iconName: 'alert-circle',
-        color: '#007bff', // Blue
-        bgColor: '#eaf3ff', // Light Blue
-      };
+const PaymentReceived = ({ selectedStep }) => {
+  if (!selectedStep || !selectedStep.status) {
+    return null;
   }
-};
 
-const PaymentReceived = ({ status = 'pending' }) => {
-  const { title, message, iconName, color, bgColor } = getStatusContent(status.toLowerCase());
-
-  return (
-    <View style={[styles.cardContainer, { backgroundColor: bgColor, borderColor: color }]}>
-      
-      <View style={styles.header}>
-        <View style={[styles.iconCircle, { backgroundColor: color + '1A' }]}> 
-          {/* Icon with primary color */}
-          <Icon name={iconName} size={30} color={color} />
-        </View>
-        <Text style={[styles.statusTitle, { color: color }]}>
-          {title}
+  if (selectedStep.status === 'pending') {
+    return (
+      <View style={styles.contentPlaceholder}>
+        <Icon name="alert-circle-outline" size={48} color="#EF4444" />{' '}
+        <Text style={styles.contentPlaceholderTitle}>Payment Pending</Text>
+        <Text style={styles.contentPlaceholderText}>
+          We are waiting for confirmation of your transaction. Please check back
+          soon.
         </Text>
       </View>
+    );
+  } else if (selectedStep.status === 'in-progress') {
+    return (
+      <View style={styles.contentPlaceholder}>
+        <Icon name="hourglass-outline" size={48} color="#FFA500" />{' '}
+        <Text style={styles.contentPlaceholderTitle}>Payment In Progress</Text>
+        <Text style={styles.contentPlaceholderText}>
+          Your transaction is currently being processed. This may take a few
+          moments.
+        </Text>
+      </View>
+    );
+  } else if (selectedStep.status === 'completed') {
+    return (
+      <View style={styles.contentPlaceholder}>
+        <Icon name="checkmark-circle-outline" size={48} color="#28A745" />{' '}
+        <Text style={styles.contentPlaceholderTitle}>Payment Complete</Text>
+        <Text style={styles.contentPlaceholderText}>
+          Your payment has been successfully received and processed. Thank you!
+        </Text>
+      </View>
+    );
+  }
 
-      <Text style={styles.messageText}>
-        {message}
-      </Text>
-    </View>
-  );
+  return null;
 };
 
 const styles = StyleSheet.create({
-  cardContainer: {
-    padding: 20,
+  contentPlaceholder: {
+    backgroundColor: '#f5f5f5',
     borderRadius: 12,
-    borderLeftWidth: 8, // Prominent colored border
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 5,
-    marginVertical: 15,
-  },
-  header: {
-    flexDirection: 'row',
+    padding: 32,
     alignItems: 'center',
-    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
-  iconCircle: {
-    marginRight: 15,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
+  contentPlaceholderTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+    marginTop: 12,
+    textAlign: 'center',
   },
-  statusTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  messageText: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#333',
-    marginLeft: 65, // Align text under the title, skipping the icon area
+  contentPlaceholderText: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'justify',
+    lineHeight: 20,
   },
 });
 

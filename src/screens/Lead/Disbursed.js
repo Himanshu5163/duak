@@ -2,9 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-
-
-const Installation = ({ selectedStep }) => {
+const Disbursed = ({ selectedStep }) => {
   if (!selectedStep || !selectedStep.status) {
     return null;
   }
@@ -13,10 +11,13 @@ const Installation = ({ selectedStep }) => {
     return (
       <View style={styles.contentPlaceholder}>
         <Icon name="alert-circle-outline" size={48} color="#EF4444" />{' '}
-        <Text style={styles.contentPlaceholderTitle}>Installation Pending</Text>
+        <Text style={styles.contentPlaceholderTitle}>
+          Subsidy Application Preparation
+        </Text>
         <Text style={styles.contentPlaceholderText}>
-          Installation is booked and confirmed, awaiting the scheduled service
-          date and time.
+          We are preparing and submitting your solar subsidy application to the
+          relevant government agency. This initial documentation phase usually
+          takes 1-3 business days.
         </Text>
       </View>
     );
@@ -25,11 +26,12 @@ const Installation = ({ selectedStep }) => {
       <View style={styles.contentPlaceholder}>
         <Icon name="hourglass-outline" size={48} color="#FFA500" />{' '}
         <Text style={styles.contentPlaceholderTitle}>
-          Installation In Progress
+          Government Review in Progress
         </Text>
         <Text style={styles.contentPlaceholderText}>
-          The installation team is currently on-site working, or the service is
-          scheduled for today.
+          Your subsidy application is now officially under review by the
+          government authority. This is a crucial administrative step that can
+          take **4-8 weeks** depending on processing volumes.
         </Text>
       </View>
     );
@@ -38,11 +40,12 @@ const Installation = ({ selectedStep }) => {
       <View style={styles.contentPlaceholder}>
         <Icon name="checkmark-circle-outline" size={48} color="#28A745" />{' '}
         <Text style={styles.contentPlaceholderTitle}>
-          Installation Complete! 🥳
+          Subsidy Approved and Disbursed
         </Text>
         <Text style={styles.contentPlaceholderText}>
-          The installation has been successfully completed and tested. Your
-          system is fully operational.
+          Fantastic news! Your solar subsidy has been officially **approved**
+          and the funds have been disbursed. This completes the financial
+          incentive step of your project.
         </Text>
       </View>
     );
@@ -76,4 +79,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Installation;
+export default Disbursed;
