@@ -26,7 +26,7 @@ const StatusBadge = ({ status }) => {
               : status === 'pending'
               ? '#f8d7da'
               : status === 'in-progress'
-              ? '#e2e3e5'
+              ? '#FFA500'
               : '#e2e3e5', // Default for 'disabled'
         },
       ]}
@@ -41,7 +41,7 @@ const StatusBadge = ({ status }) => {
                 : status === 'pending'
                 ? '#721c24'
                 : status === 'in-progress'
-                ? '#495057'
+                ? '#fff'
                 : '#495057',
           },
         ]}

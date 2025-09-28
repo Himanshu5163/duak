@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Platform,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { Picker } from '@react-native-picker/picker';
 import { useSelector, useDispatch } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
@@ -20,7 +21,7 @@ import { fetchDistricts, clearDistricts } from '../../redux/districtSlice';
 import { fetchCities, clearCities } from '../../redux/citySlice';
 import { fetchLeadSources } from '../../redux/leadSourceSlice';
 
-const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded ,selectedStep}) => {
+const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded , selectedStep }) => {
   const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
   const { states, status: stateStatus } = useSelector(state => state.state);
@@ -186,10 +187,11 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded ,selectedSte
     }
   };
 
-  return (
-    <View style={styles.formContainer}>
 
-      
+
+if(selectedStep.status==='pending'){
+return (
+    <View style={styles.formContainer}>
       {/* <Text style={styles.sectionTitle}>{label}</Text> */}
 
       {/* Email */}
@@ -345,6 +347,37 @@ const LeadAdd = ({ label = 'Add Lead', leadInfo = null, onLeadAdded ,selectedSte
       </TouchableOpacity>
     </View>
   );
+}
+else if(selectedStep.status==='in-progress'){
+return (
+    <View style={styles.contentPlaceholder}>
+<Icon name="hourglass-outline" size={48} color="#FFA500" /> // hourglass for pending
+                <Text style={styles.contentPlaceholderTitle}>
+                  Client Information
+                </Text>
+                <Text style={styles.contentPlaceholderText}>
+                 The information you have provided for  
+                 client information is 
+                 currently under verification by the admin.
+                  You will be notified once the verification is complete.
+                </Text>
+              </View>
+)
+}
+else if (selectedStep.status === 'completed') {
+  return (
+    <View style={styles.contentPlaceholder}>
+      <Icon name="checkmark-circle-outline" size={48} color="#28A745" /> {/* checkmark for completed */}
+      <Text style={styles.contentPlaceholderTitle}>
+        Client Information 
+      </Text>
+      <Text style={styles.contentPlaceholderText}>
+        Your client information has been successfully verified by the admin.
+      </Text>
+    </View> 
+  );
+}
+  
 };
 
 const styles = StyleSheet.create({
@@ -409,6 +442,9 @@ const styles = StyleSheet.create({
   errorBorder: {
     borderColor: '#EF4444',
   },
+  contentPlaceholder: { backgroundColor: '#f5f5f5', borderRadius: 12, padding: 32, alignItems: 'center', borderWidth: 1, borderColor: '#e0e0e0' },
+  contentPlaceholderTitle: { fontSize: 18, fontWeight: '600', color: '#374151', marginBottom: 8 ,marginTop:12 },
+  contentPlaceholderText: { fontSize: 14, color: '#6b7280', textAlign: 'center', lineHeight: 20 },
 });
 
 export default LeadAdd;

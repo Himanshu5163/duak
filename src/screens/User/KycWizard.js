@@ -20,15 +20,11 @@ import StatusBadge from './StatusBadge';
 import { useSelector } from 'react-redux';
 import { Strings } from '../../theme/Strings';
 import { getToken } from '../../utils/storage';
-import Qualified from '../Lead/Qualified';
-import BankLoan from '../Lead/BankLoan';
-import PaymentReceived from '../Lead/PaymentReceived';
-import MaterialDispatch from '../Lead/MaterialDispatch';
 const { width } = Dimensions.get('window');
 
 const KycWizard = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedStepId, setSelectedStepId] = useState(5);
+  const [selectedStepId, setSelectedStepId] = useState(1);
   const [visibleSteps, setVisibleSteps] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [leadInfo, setLeadInfo] = useState({});
@@ -122,42 +118,34 @@ fetchWorkflowSteps();
     <DocumentUploader onDocumentsChange={handleDocumentsChange} />
   );
 
-  const LeadComponent = () => (
-   
-    <LeadAdd leadInfo={leadInfo} onLeadAdded={onLeadAdded}/>
-    
-  );
+
 
   const QualifiedComponent = () => (
-    // <View style={styles.stepComponentContainer}>
-    //   <Text style={styles.stepComponentTitle}>Qualification Check</Text>
-    //   <Text style={styles.stepComponentText}>Verify eligibility based on criteria like credit score and qualifications.</Text>
-    // </View>
-    <Qualified />
+    <View style={styles.stepComponentContainer}>
+      <Text style={styles.stepComponentTitle}>Qualification Check</Text>
+      <Text style={styles.stepComponentText}>Verify eligibility based on criteria like credit score and qualifications.</Text>
+    </View>
   );
 
   const BankLoanProcessComponent = () => (
-    // <View style={styles.stepComponentContainer}>
-    //   <Text style={styles.stepComponentTitle}>Bank Loan Application</Text>
-    //   <Text style={styles.stepComponentText}>Submit loan application, track approval status, and handle documentation.</Text>
-    // </View>
-    <BankLoan />
+    <View style={styles.stepComponentContainer}>
+      <Text style={styles.stepComponentTitle}>Bank Loan Application</Text>
+      <Text style={styles.stepComponentText}>Submit loan application, track approval status, and handle documentation.</Text>
+    </View>
   );
 
   const PaymentReceivedComponent = () => (
-    // <View style={styles.stepComponentContainer}>
-    //   <Text style={styles.stepComponentTitle}>Payment Confirmation</Text>
-    //   <Text style={styles.stepComponentText}>Record payment details, verify receipt, and update transaction status.</Text>
-    // </View>
-    <PaymentReceived />
+    <View style={styles.stepComponentContainer}>
+      <Text style={styles.stepComponentTitle}>Payment Confirmation</Text>
+      <Text style={styles.stepComponentText}>Record payment details, verify receipt, and update transaction status.</Text>
+    </View>
   );
 
   const MaterialDispatchComponent = () => (
-    // <View style={styles.stepComponentContainer}>
-    //   <Text style={styles.stepComponentTitle}>Material Dispatch</Text>
-    //   <Text style={styles.stepComponentText}>Schedule and track dispatch of materials to the installation site.</Text>
-    // </View>
-    <MaterialDispatch />
+    <View style={styles.stepComponentContainer}>
+      <Text style={styles.stepComponentTitle}>Material Dispatch</Text>
+      <Text style={styles.stepComponentText}>Schedule and track dispatch of materials to the installation site.</Text>
+    </View>
   );
 
   const InstallationComponent = () => (
@@ -261,18 +249,7 @@ fetchWorkflowSteps();
     setSelectedStepId(step.id);
   };
 
-  const stepComponents = {
-    lead: LeadComponent ,
-    document: DocumentComponent,
-    qualified: QualifiedComponent,
-    bank_loan_process: BankLoanProcessComponent,
-    payment_received: PaymentReceivedComponent,
-    material_dispatch: MaterialDispatchComponent,
-    installation: InstallationComponent,
-    net_metering: NetMeteringComponent,
-    subsidy: SubsidyComponent,
-    disbursed: DisbursedComponent,
-  };
+  
 
   const TabItem = ({ step, index }) => {
     const status = getStepStatus(step.id);
@@ -344,8 +321,20 @@ fetchWorkflowSteps();
     const selectedStep = visibleSteps.find(s => s.id === selectedStepId);
     if (!selectedStep) return null;
 
+  
+const stepComponents = {
+    lead: () => <LeadAdd leadInfo={leadInfo} onLeadAdded={onLeadAdded} selectedStep={selectedStep} />,
+    document: DocumentComponent,
+    qualified: QualifiedComponent,
+    bank_loan_process: BankLoanProcessComponent,
+    payment_received: PaymentReceivedComponent,
+    material_dispatch: MaterialDispatchComponent,
+    installation: InstallationComponent,
+    net_metering: NetMeteringComponent,
+    subsidy: SubsidyComponent,
+    disbursed: DisbursedComponent,
+  };
     const StepComp = stepComponents[selectedStep.key];
-
     return (
       <View style={styles.contentContainer}>
         <View style={styles.contentHeader}>
@@ -364,7 +353,7 @@ fetchWorkflowSteps();
         </View>
         <Text style={styles.contentDescription}>{selectedStep.description}</Text>
         <View style={styles.contentArea}>
-          {StepComp ? <StepComp selectedStep={selectedStep} /> : (
+          {StepComp ? <StepComp  /> : (
             <View style={styles.contentPlaceholder}>
               <Icon name={selectedStep.icon} size={48} color="#9ca3af" />
               <Text style={styles.contentPlaceholderTitle}>
